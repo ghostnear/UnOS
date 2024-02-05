@@ -1,32 +1,83 @@
-.PHONY: build clean
+DEFAULT_HOST!=../default-host.sh
+HOST?=DEFAULT_HOST
+HOSTARCH!=../target-triplet-to-arch.sh $(HOST)
 
-C_SOURCES := $(wildcard src/*.c src/drivers/*.c libc/src/*.c)
-C_HEADERS := $(wildcard include/*.h include/drivers/*.h libc/include/*.h)
-C_OBJ := $(patsubst libc/src/%.c,build/libc/src/%.o,$(patsubst src/%.c,build/src/%.o,$(C_SOURCES)))
-C_FLAGS = -g -ffreestanding -Wall -Wextra -fno-exceptions -m32 -O2
+CFLAGS?=-O2 -g
+CPPFLAGS?=
+LDFLAGS?=
+LIBS?=
 
-ASM_SOURCES := $(wildcard src/*.asm)
-ASM_OBJ := $(patsubst src/%.asm,build/src/%.o,$(ASM_SOURCES))
+DESTDIR?=
+PREFIX?=/usr/local
+EXEC_PREFIX?=$(PREFIX)
+BOOTDIR?=$(EXEC_PREFIX)/boot
+INCLUDEDIR?=$(PREFIX)/include
 
-build: $(C_OBJ) build/kernel_entry.o
-	@echo "Building kernel..."
-	@i386-elf-ld -o build/kernel.bin -Ttext 0x1000 $(C_OBJ) build/kernel_entry.o --oformat binary
-	@i386-elf-ld -o build/kernel.elf -Ttext 0x1000 $(C_OBJ) build/kernel_entry.o
+CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra
+CPPFLAGS:=$(CPPFLAGS) -D__is_kernel -Iinclude
+LDFLAGS:=$(LDFLAGS)
+LIBS:=$(LIBS) -nostdlib -lk -lgcc
 
-build/libc/src/%.o: src/%.c $(C_HEADERS)
-	@mkdir -p $(dir $@)
-	@i386-elf-gcc -ffreestanding ${C_FLAGS} -c $< -o $@ -I include/ -Wall
+ARCHDIR=arch/$(HOSTARCH)
 
-build/src/%.o: src/%.c $(C_HEADERS)
-	@mkdir -p $(dir $@)
-	@i386-elf-gcc -ffreestanding ${C_FLAGS} -c $< -o $@ -I include/ -I libc/include/ -Wall
+include $(ARCHDIR)/make.config
 
-build/src/%.o: src/%.asm
-	@mkdir -p $(dir $@)
-	@nasm $< -f elf -o $@
+CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
+CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
+LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
+LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
-build/kernel_entry.o: src/kernel_entry.asm
-	@nasm $< -f elf -o $@
+KERNEL_OBJS=\
+$(KERNEL_ARCH_OBJS) \
+kernel/kernel.o \
+
+OBJS=\
+$(ARCHDIR)/crti.o \
+$(ARCHDIR)/crtbegin.o \
+$(KERNEL_OBJS) \
+$(ARCHDIR)/crtend.o \
+$(ARCHDIR)/crtn.o \
+
+LINK_LIST=\
+$(LDFLAGS) \
+$(ARCHDIR)/crti.o \
+$(ARCHDIR)/crtbegin.o \
+$(KERNEL_OBJS) \
+$(LIBS) \
+$(ARCHDIR)/crtend.o \
+$(ARCHDIR)/crtn.o \
+
+.PHONY: all clean install install-headers install-kernel
+.SUFFIXES: .o .c .S
+
+all: unos.kernel
+
+unos.kernel: $(OBJS) $(ARCHDIR)/linker.ld
+	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
+	grub-file --is-x86-multiboot unos.kernel
+
+$(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
+	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
+
+.c.o:
+	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+
+.S.o:
+	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
 
 clean:
-	@rm -r build/
+	rm -f unos.kernel
+	rm -f $(OBJS) *.o */*.o */*/*.o
+	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+
+install: install-headers install-kernel
+
+install-headers:
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	cp -R --preserve=timestamps include/. $(DESTDIR)$(INCLUDEDIR)/.
+
+install-kernel: unos.kernel
+	mkdir -p $(DESTDIR)$(BOOTDIR)
+	cp unos.kernel $(DESTDIR)$(BOOTDIR)
+
+-include $(OBJS:.o=.d)
