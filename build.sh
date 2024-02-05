@@ -5,3 +5,5 @@ set -e
 for PROJECT in $PROJECTS; do
   (cd $PROJECT && DESTDIR="$SYSROOT" $MAKE install -j $(nproc))
 done
+
+. ./iso.sh

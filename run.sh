@@ -1,5 +1,5 @@
 #!/bin/sh
 set -e
-. ./iso.sh
+. ./config.sh
 
 qemu-system-$(./target-triplet-to-arch.sh $HOST) -cdrom unos.iso
