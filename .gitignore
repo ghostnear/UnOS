@@ -1,9 +1,7 @@
-# Ignore builds
 bin/
 build/
-*.json
 .cache/
 .vscode/
-isodir/
-sysroot/
-*.iso
+compile_commands.json
+nasm-*/
+i686-elf-tools-*/

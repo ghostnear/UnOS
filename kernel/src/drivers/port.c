@@ -1,7 +1,8 @@
-#include "port.h"
+#include "drivers/port.h"
 
-// https://github.com/cfenollosa/os-tutorial/blob/master/15-video-ports/drivers/ports.c
-// Real cool guide.
+/* 
+ *  https://github.com/cfenollosa/os-tutorial/blob/master/15-video-ports/drivers/ports.c
+ */
 
 uint8_t port_read_byte(uint16_t port)
 {
