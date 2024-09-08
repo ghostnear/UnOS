@@ -1,5 +1,5 @@
-const Setup = @import("setup.zig");
-const Console = @import("console.zig");
+const Setup = @import("kernel/setup.zig");
+const Console = @import("kernel/console.zig");
 const MultiBoot = @import("arch/multiboot.zig");
 
 export var multiboot align(4) linksection(".multiboot") =

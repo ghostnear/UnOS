@@ -4,6 +4,6 @@ pub fn init() callconv(.Inline) void
 {
     if(cpu.arch == .x86)
     {
-        @import("arch/x86/kernel/setup.zig").init();
+        @import("../arch/x86/kernel/setup.zig").init();
     }
 }

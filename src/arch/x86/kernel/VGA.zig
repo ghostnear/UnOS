@@ -39,24 +39,35 @@ fn vgaEntry(uc: u8, new_color: u8) u16 {
     return uc | (c << 8);
 }
 
-pub fn init() void {
-    clear();
-}
-
-pub fn setColor(new_color: u8) void {
+fn setColor(new_color: u8) void {
     color = new_color;
 }
 
-pub fn clear() void {
+fn clear() void {
     @memset(buffer[0..VGA_SIZE], vgaEntry(' ', color));
 }
 
-pub fn putCharAt(c: u8, new_color: u8, x: usize, y: usize) void {
+fn putCharAt(c: u8, new_color: u8, x: usize, y: usize) void {
     const index = y * VGA_WIDTH + x;
     buffer[index] = vgaEntry(c, new_color);
 }
 
-pub fn putChar(c: u8) void {
+const writer = Writer(void, error{}, callback){ .context = {} };
+
+fn callback(_: void, string: []const u8) error{}!usize {
+    puts(string);
+    return string.len;
+}
+
+fn printf(comptime format: []const u8, args: anytype) void {
+    fmt.format(writer, format, args) catch unreachable;
+}
+
+pub fn init() void {
+    clear();
+}
+
+pub fn putch(c: u8) void {
     putCharAt(c, color, column, row);
     column += 1;
     if (column == VGA_WIDTH) {
@@ -69,16 +80,5 @@ pub fn putChar(c: u8) void {
 
 pub fn puts(data: []const u8) void {
     for (data) |c|
-        putChar(c);
-}
-
-pub const writer = Writer(void, error{}, callback){ .context = {} };
-
-fn callback(_: void, string: []const u8) error{}!usize {
-    puts(string);
-    return string.len;
-}
-
-pub fn printf(comptime format: []const u8, args: anytype) void {
-    fmt.format(writer, format, args) catch unreachable;
+        putch(c);
 }
