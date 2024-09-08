@@ -8,13 +8,13 @@ clean:
 
 build86:
 	@zig build -DprojectTarget=x86
-	@cmake -E make_directory zig-out/iso_root
-	@cmake -E copy_directory boot zig-out/iso_root/boot
-	@cmake -E copy zig-out/bin/kernel.elf zig-out/iso_root/boot/kernel.elf
-	@grub-mkrescue -o zig-out/UnOS-livecd.iso zig-out/iso_root
+	@cmake -E make_directory zig-out/iso_root-x86
+	@cmake -E copy_directory boot zig-out/iso_root-x86/boot
+	@cmake -E copy zig-out/bin/kernel.elf zig-out/iso_root-x86/boot/kernel.elf
+	@grub-mkrescue -o zig-out/UnOS-livecd-x86.iso zig-out/iso_root-x86
 
 run86: build86
-	@qemu-system-x86_64 -cdrom zig-out/UnOS-livecd.iso -debugcon stdio -vga virtio -m 4G -machine q35,accel=kvm:whpx:tcg -no-reboot -no-shutdown
+	@qemu-system-x86_64 -cdrom zig-out/UnOS-livecd-x86.iso -debugcon stdio -vga virtio -m 4G -machine q35,accel=kvm:whpx:tcg -no-reboot -no-shutdown
 
 build4b:
 	@zig build -DprojectTarget=rpi4b

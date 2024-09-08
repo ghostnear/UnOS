@@ -52,17 +52,6 @@ fn putCharAt(c: u8, new_color: u8, x: usize, y: usize) void {
     buffer[index] = vgaEntry(c, new_color);
 }
 
-const writer = Writer(void, error{}, callback){ .context = {} };
-
-fn callback(_: void, string: []const u8) error{}!usize {
-    puts(string);
-    return string.len;
-}
-
-fn printf(comptime format: []const u8, args: anytype) void {
-    fmt.format(writer, format, args) catch unreachable;
-}
-
 pub fn init() void {
     clear();
 }
@@ -81,4 +70,15 @@ pub fn putch(c: u8) void {
 pub fn puts(data: []const u8) void {
     for (data) |c|
         putch(c);
+}
+
+const writer = Writer(void, error{}, callback){ .context = {} };
+
+fn callback(_: void, string: []const u8) error{}!usize {
+    puts(string);
+    return string.len;
+}
+
+fn printf(comptime format: []const u8, args: anytype) void {
+    fmt.format(writer, format, args) catch unreachable;
 }

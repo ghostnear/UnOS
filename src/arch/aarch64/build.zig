@@ -1,11 +1,7 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) anyerror!void {
-    const target = b.standardTargetOptions(.{ .default_target = .{
-        .cpu_arch = .aarch64,
-        .os_tag = .freestanding,
-        .abi = .none
-    } });
+    const target = b.standardTargetOptions(.{ .default_target = .{ .cpu_arch = .aarch64, .os_tag = .freestanding, .abi = .none } });
 
     const optimize = b.standardOptimizeOption(.{});
 
