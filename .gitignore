@@ -1,7 +1,2 @@
-bin/
-build/
-.cache/
-.vscode/
-compile_commands.json
-nasm-*/
-i686-elf-tools-*/
+.zig-cache/
+zig-out/
