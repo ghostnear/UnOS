@@ -1,9 +1,5 @@
 const Setup = @import("kernel/setup.zig");
 const Console = @import("kernel/console.zig");
-const MultiBoot = @import("arch/multiboot.zig");
-
-export var multiboot align(4) linksection(".multiboot") =
-    MultiBoot.Header{};
 
 export fn _start() callconv(.Naked) noreturn  {
     Setup.init();       // This initializes platform specific stuff and calls kmain.
